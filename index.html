@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3447c4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>แปลแคปชัน pixiv</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Zen+Maru+Gothic:wght@500;700&display=swap">
+<style>
+  /* Layout: one narrow column built for a phone. Input on top, then a Japanese block and an English block, each with its own copy button and a back-translation line. */
+  :root {
+    --bg: #f2f4fa;
+    --surface: #ffffff;
+    --fg: #1b2033;
+    --muted: #596280;
+    --line: #d8ddec;
+    --ja: #3447c4;
+    --ja-soft: #e7eafb;
+    --en: #0b7571;
+    --en-soft: #dcf2f0;
+    --on-accent: #ffffff;
+    --warn: #9a3412;
+    --warn-soft: #ffedd5;
+    --font-body: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-display: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "IBM Plex Sans Thai", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141e;
+      --surface: #1a1f2e;
+      --fg: #e7eaf6;
+      --muted: #9aa2bf;
+      --line: #2c344b;
+      --ja: #94a1ff;
+      --ja-soft: #232b55;
+      --en: #62d2ca;
+      --en-soft: #143633;
+      --on-accent: #10142a;
+      --warn: #fdba74;
+      --warn-soft: #3a2314;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141e;
+    --surface: #1a1f2e;
+    --fg: #e7eaf6;
+    --muted: #9aa2bf;
+    --line: #2c344b;
+    --ja: #94a1ff;
+    --ja-soft: #232b55;
+    --en: #62d2ca;
+    --en-soft: #143633;
+    --on-accent: #10142a;
+    --warn: #fdba74;
+    --warn-soft: #3a2314;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-block: 20px 40px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  main { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+  header { display: flex; flex-direction: column; gap: 4px; }
+  .route { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  .route b { font-weight: 600; }
+  .route .ja-t { color: var(--ja); }
+  .route .en-t { color: var(--en); }
+  h1 { font-family: var(--font-display); font-size: 28px; line-height: 1.2; margin: 0; font-weight: 700; text-wrap: balance; }
+  .lead { margin: 0; color: var(--muted); font-size: 15px; max-width: 56ch; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 12px 20px; }
+  .group { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .group > span { font-size: 12px; letter-spacing: 0.04em; color: var(--muted); font-weight: 500; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label { padding: 7px 14px; font-size: 14px; cursor: pointer; color: var(--muted); border-right: 1px solid var(--line); background: var(--surface); white-space: nowrap; }
+  .seg label:last-of-type { border-right: 0; }
+  .seg input:checked + label { background: var(--ja); color: var(--on-accent); font-weight: 600; }
+  .seg input:focus-visible + label { outline: 2px solid var(--ja); outline-offset: -3px; }
+
+  textarea {
+    width: 100%;
+    min-height: 150px;
+    resize: vertical;
+    font: inherit;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  textarea:focus-visible { outline: 2px solid var(--ja); outline-offset: 1px; }
+  .field-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); }
+
+  .go {
+    font: inherit; font-weight: 600; font-size: 16px;
+    background: var(--ja); color: var(--on-accent);
+    border: 0; border-radius: 10px; padding: 12px 18px; cursor: pointer;
+  }
+  .go:hover { filter: brightness(1.08); }
+  .go:focus-visible, .copy:focus-visible { outline: 2px solid var(--ja); outline-offset: 2px; }
+  .go[disabled] { opacity: 0.6; cursor: progress; }
+
+  .msg { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+
+  .results { display: flex; flex-direction: column; gap: 14px; transition: opacity .15s; }
+  .results[aria-busy="true"] { opacity: 0.45; }
+  .results-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .results-head h2 { margin: 0; font-size: 14px; font-weight: 600; color: var(--muted); letter-spacing: 0.04em; }
+  .chip { font-size: 12px; padding: 2px 10px; border-radius: 99px; background: var(--ja-soft); color: var(--ja); font-weight: 500; }
+
+  .result { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .result-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; }
+  .result.ja .result-top { background: var(--ja-soft); color: var(--ja); }
+  .result.en .result-top { background: var(--en-soft); color: var(--en); }
+  .lang { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+  .copy {
+    font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    color: inherit; background: transparent; border: 1px solid currentColor; border-radius: 8px; padding: 4px 12px;
+  }
+  .out { padding: 14px; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 17px; line-height: 1.85; }
+  .result.ja .out { font-family: var(--font-display); font-weight: 500; }
+  .back { padding: 10px 14px 14px; border-top: 1px dashed var(--line); font-size: 14px; color: var(--muted); }
+  .back b { font-weight: 600; color: var(--fg); }
+  .back p { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  .notes { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; font-size: 14px; }
+  .notes h3 { margin: 0 0 6px; font-size: 13px; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; }
+  .notes ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+
+  footer { font-size: 13px; color: var(--muted); max-width: 56ch; }
+
+  @media (prefers-reduced-motion: reduce) { .results { transition: none; } }
+
+  details.settings { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 4px 16px; }
+  details.settings summary { cursor: pointer; padding: 12px 0; font-weight: 600; font-size: 14px; color: var(--muted); }
+  details.settings summary:focus-visible { outline: 2px solid var(--ja); outline-offset: 2px; }
+  .keybox { display: flex; flex-direction: column; gap: 10px; padding-bottom: 16px; font-size: 14px; color: var(--muted); }
+  .keybox input { width: 100%; font: inherit; font-size: 16px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .keybox input:focus-visible { outline: 2px solid var(--ja); outline-offset: 1px; }
+  .keybox .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .keybox button { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px; padding: 7px 14px; border: 1px solid var(--ja); background: var(--ja); color: var(--on-accent); }
+  .keybox button.ghost { background: transparent; color: var(--ja); }
+  .keybox button:focus-visible { outline: 2px solid var(--ja); outline-offset: 2px; }
+  .keybox p { margin: 0; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="route"><b>ไทย</b> → <b class="ja-t">日本語</b> + <b class="en-t">English</b></div>
+    <h1>แปลแคปชัน pixiv</h1>
+    <p class="lead">พิมพ์ภาษาไทย แล้วได้ภาษาญี่ปุ่นกับอังกฤษคู่กัน ใช้คำที่คนวาดรูปในญี่ปุ่นใช้จริง พร้อมแปลกลับเป็นไทยให้เช็กความหมาย</p>
+  </header>
+
+  <section class="panel" aria-label="ข้อความต้นฉบับ">
+    <div class="controls">
+      <div class="group" role="radiogroup" aria-labelledby="mode-l">
+        <span id="mode-l">แปลอะไร</span>
+        <div class="seg">
+          <input type="radio" name="mode" id="m-caption" value="caption" checked><label for="m-caption">คำบรรยาย</label>
+          <input type="radio" name="mode" id="m-title" value="title"><label for="m-title">ชื่อผลงาน</label>
+          <input type="radio" name="mode" id="m-tags" value="tags"><label for="m-tags">แท็ก</label>
+        </div>
+      </div>
+      <div class="group" role="radiogroup" aria-labelledby="tone-l">
+        <span id="tone-l">น้ำเสียงภาษาญี่ปุ่น</span>
+        <div class="seg">
+          <input type="radio" name="tone" id="t-polite" value="polite" checked><label for="t-polite">สุภาพ</label>
+          <input type="radio" name="tone" id="t-casual" value="casual"><label for="t-casual">กันเอง</label>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <textarea id="src" lang="th" aria-label="ข้อความภาษาไทย" placeholder="พิมพ์ข้อความภาษาไทยที่นี่">วันนี้วาดรูปสาวน้อยในสวนดอกไม้ค่ะ
+ใช้เวลาประมาณสามวัน
+ถ้าชอบฝากกดไลก์และบุ๊กมาร์กด้วยนะคะ</textarea>
+      <div class="field-foot"><span id="hint">แต่ละบรรทัดจะคงเป็นบรรทัดเดิมในผลแปล</span><span id="count">0</span></div>
+    </div>
+
+    <div id="msg" class="msg" hidden role="status"></div>
+    <button class="go" id="go" type="button">แปล</button>
+  </section>
+
+  <details class="settings" id="settings">
+    <summary>ตั้งค่า API key (Gemini ฟรี)</summary>
+    <div class="keybox">
+      <p>ขอคีย์ฟรีที่ <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> ไม่ต้องใส่บัตร คีย์เก็บในเบราว์เซอร์เครื่องนี้เท่านั้น และส่งไปที่ Google เพื่อแปลเท่านั้น</p>
+      <input type="password" id="key" autocomplete="off" placeholder="AIza..." aria-label="Gemini API key">
+      <div class="row">
+        <button type="button" id="key-save">บันทึกคีย์</button>
+        <button type="button" class="ghost" id="key-clear">ลบคีย์</button>
+        <span id="key-status"></span>
+      </div>
+    </div>
+  </details>
+
+  <section class="results" id="results" aria-live="polite" aria-busy="false">
+    <div class="results-head">
+      <h2>ผลแปล</h2>
+      <span class="chip" id="sample-chip">ตัวอย่าง ยังไม่ได้แปลจริง</span>
+    </div>
+
+    <article class="result ja">
+      <div class="result-top"><span class="lang">日本語</span><button class="copy" type="button" data-target="ja">คัดลอก</button></div>
+      <p class="out" id="ja" lang="ja">今日は花畑にいる少女を描きました。
+完成まで三日ほどかかりました。
+気に入っていただけたら、いいねとブックマークをよろしくお願いします。</p>
+      <div class="back"><b>แปลกลับเป็นไทย</b><p id="ja-back" lang="th">วันนี้วาดเด็กสาวในทุ่งดอกไม้ ใช้เวลาประมาณสามวันกว่าจะเสร็จ ถ้าถูกใจ ฝากกดไลก์และบุ๊กมาร์กด้วย</p></div>
+    </article>
+
+    <article class="result en">
+      <div class="result-top"><span class="lang">English</span><button class="copy" type="button" data-target="en">คัดลอก</button></div>
+      <p class="out" id="en" lang="en">Today I drew a girl in a flower garden.
+It took about three days to finish.
+If you like it, I'd really appreciate a like and a bookmark!</p>
+      <div class="back"><b>แปลกลับเป็นไทย</b><p id="en-back" lang="th">วันนี้ฉันวาดเด็กผู้หญิงในสวนดอกไม้ ใช้เวลาประมาณสามวัน ถ้าชอบ ขอไลก์และบุ๊กมาร์กด้วยนะ</p></div>
+    </article>
+
+    <div class="notes" id="notes">
+      <h3>หมายเหตุ</h3>
+      <ul id="notes-list">
+        <li>いいね กับ ブックマーク เป็นชื่อปุ่มไลก์และบุ๊กมาร์กบน pixiv ใช้คำนี้ผู้อ่านจะเข้าใจทันที</li>
+        <li>ค่ะ คะ นะคะ ในต้นฉบับกลายเป็นน้ำเสียงสุภาพของประโยค ไม่ได้แปลเป็นคำแยก</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>ผลแปลมาจาก Gemini อ่านทวนก่อนโพสต์ทุกครั้ง โดยเฉพาะชื่อตัวละคร ชื่อเฉพาะ และข้อความที่ต้องแม่นยำ</footer>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var src = $('src'), go = $('go'), msg = $('msg'), results = $('results');
+
+  function updateCount() { $('count').textContent = src.value.length + ' ตัวอักษร'; }
+  src.addEventListener('input', updateCount);
+  updateCount();
+
+  function val(name) { var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; }
+
+  function updateHint() {
+    var m = val('mode');
+    $('hint').textContent = m === 'tags' ? 'ใส่หนึ่งแท็กต่อบรรทัด หรือคั่นด้วยเว้นวรรคหรือจุลภาค'
+      : m === 'title' ? 'ชื่อผลงานสั้นๆ หนึ่งบรรทัด'
+      : 'แต่ละบรรทัดจะคงเป็นบรรทัดเดิมในผลแปล';
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="mode"]'), function (r) { r.addEventListener('change', updateHint); });
+
+  function showMsg(t) { msg.textContent = t; msg.hidden = false; }
+  function hideMsg() { msg.hidden = true; }
+
+  function buildPrompt(text, mode, tone) {
+    var modeRule = {
+      caption: 'The text is an artwork caption/description an artist posts on pixiv. Keep the original line breaks. Keep emoji, hashtags and URLs unchanged. Use the exact pixiv terms where they apply: いいね (like), ブックマーク (bookmark), フォロー, コメント, リクエスト.',
+      title: 'The text is the title of an artwork. Make it short, natural and attractive as a title, the way Japanese and English-speaking artists title their work. Do not add a period.',
+      tags: 'The text is a list of tags for a pixiv post. Split it into individual tags. For Japanese, use the tag spellings commonly used on pixiv (for example オリジナル, 女の子, 風景). For English, use the short lowercase-or-capitalized forms commonly used as tags. Output one tag per line, same order, no # symbol.'
+    }[mode];
+    var toneRule = tone === 'casual'
+      ? 'Japanese tone: friendly and casual, as an artist talks to followers (だ・である form is fine, soft endings like ね are fine). Avoid rude or blunt phrasing.'
+      : 'Japanese tone: polite (です・ます), warm and natural. Do not use stiff or excessive keigo.';
+    return [
+      'You are a professional Thai-to-Japanese and Thai-to-English translator who knows pixiv culture.',
+      'Translate the Thai text below into BOTH Japanese and English.',
+      '',
+      'Rules:',
+      '- Translate meaning and intent, not word for word. The result must read as if written by a native speaker, with correct grammar, natural word choice and natural rhythm. Nothing should sound translated.',
+      '- Thai sentence-final particles (ค่ะ, คะ, ครับ, นะ, จ้า) express tone. Reflect them in the tone of the target language instead of translating them as words.',
+      '- English: friendly and natural, the way an artist writes to followers. Avoid stiff phrasing and avoid Japanese-style English.',
+      '- ' + toneRule,
+      '- ' + modeRule,
+      '- If a Thai phrase is ambiguous, choose the most natural reading and mention it in notes_th.',
+      '- Do not add information that is not in the source.',
+      '',
+      'Then translate your Japanese and your English back into Thai (ja_back_th, en_back_th) as plain literal Thai, so the author can check the meaning.',
+      'notes_th: 0 to 3 short Thai notes, only about choices that matter (pixiv terms, ambiguous words, cultural differences). Use an empty array if nothing needs a note.',
+      '',
+      'Return ONLY JSON with exactly these keys: {"ja": string, "en": string, "ja_back_th": string, "en_back_th": string, "notes_th": string[]}. Use \\n for line breaks inside strings.',
+      '',
+      'Thai text:',
+      text
+    ].join('\n');
+  }
+
+  function render(r) {
+    $('ja').textContent = r.ja;
+    $('en').textContent = r.en;
+    $('ja-back').textContent = r.ja_back_th || '';
+    $('en-back').textContent = r.en_back_th || '';
+    var list = $('notes-list');
+    list.textContent = '';
+    var notes = Array.isArray(r.notes_th) ? r.notes_th.filter(Boolean) : [];
+    notes.forEach(function (n) { var li = document.createElement('li'); li.textContent = n; list.appendChild(li); });
+    $('notes').hidden = notes.length === 0;
+    $('sample-chip').hidden = true;
+  }
+
+  function getKey() { try { return localStorage.getItem('gemini_key') || ''; } catch (e) { return ''; } }
+  function setKey(k) { try { if (k) localStorage.setItem('gemini_key', k); else localStorage.removeItem('gemini_key'); return true; } catch (e) { return false; } }
+  function keyStatus() { $('key-status').textContent = getKey() ? 'บันทึกคีย์ไว้แล้ว' : 'ยังไม่มีคีย์'; }
+  $('key-save').addEventListener('click', function () {
+    var k = $('key').value.trim();
+    if (!k) { $('key-status').textContent = 'วางคีย์ก่อน'; return; }
+    if (!setKey(k)) { $('key-status').textContent = 'เบราว์เซอร์นี้เก็บคีย์ไม่ได้'; return; }
+    $('key').value = '';
+    keyStatus();
+  });
+  $('key-clear').addEventListener('click', function () { setKey(''); $('key').value = ''; keyStatus(); });
+  keyStatus();
+  if (!getKey()) $('settings').open = true;
+
+  var MODEL = 'gemini-3.6-flash';
+  async function callGemini(key, prompt) {
+    var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: 'application/json', temperature: 0.4 }
+      })
+    });
+    if (!res.ok) { var err = new Error('http'); err.status = res.status; throw err; }
+    var data = await res.json();
+    var cand = data.candidates && data.candidates[0];
+    var parts = cand && cand.content && cand.content.parts ? cand.content.parts : [];
+    var t = parts.map(function (b) { return b.text || ''; }).join('');
+    var m = t.match(/\{[\s\S]*\}/);
+    return m ? JSON.parse(m[0]) : null;
+  }
+
+  async function translate() {
+    var text = src.value.trim();
+    if (!text) { showMsg('พิมพ์ข้อความภาษาไทยก่อน แล้วกดแปล'); src.focus(); return; }
+    hideMsg();
+    go.disabled = true;
+    go.textContent = 'กำลังแปล…';
+    results.setAttribute('aria-busy', 'true');
+    try {
+      var key = getKey();
+      if (!key) { showMsg('ใส่ API key ในส่วนตั้งค่าก่อน แล้วกดแปล'); $('settings').open = true; return; }
+      var r = await callGemini(key, buildPrompt(text, val('mode'), val('tone')));
+      if (!r || typeof r.ja !== 'string' || typeof r.en !== 'string') { showMsg('ได้ผลแปลที่อ่านไม่ออก ลองกดแปลอีกครั้ง'); return; }
+      render(r);
+    } catch (e) {
+      var st = e && e.status;
+      if (st === 400 || st === 401 || st === 403) showMsg('API key ใช้ไม่ได้ ตรวจว่าวางคีย์ครบ และคีย์ยังไม่ถูกลบ');
+      else if (st === 429) showMsg('ใช้เกินโควตาฟรีชั่วคราว รอสักครู่แล้วลองใหม่ หรือรอถึงวันถัดไป');
+      else showMsg('แปลไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วกดแปลอีกครั้ง');
+    } finally {
+      go.disabled = false;
+      go.textContent = 'แปล';
+      results.setAttribute('aria-busy', 'false');
+    }
+  }
+  go.addEventListener('click', translate);
+
+  function selectText(el) {
+    var range = document.createRange();
+    range.selectNodeContents(el);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function (btn) {
+    btn.addEventListener('click', function () {
+      var el = $(btn.getAttribute('data-target'));
+      var done = function (t) { btn.textContent = t; setTimeout(function () { btn.textContent = 'คัดลอก'; }, 1600); };
+      var p = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(el.textContent) : Promise.reject();
+      p.then(function () { done('คัดลอกแล้ว'); }).catch(function () { selectText(el); done('เลือกข้อความแล้ว'); });
+    });
+  });
+})();
+</script>
+</body>
+</html>
